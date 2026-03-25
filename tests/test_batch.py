@@ -1,7 +1,9 @@
 # thinkstrip | Batch helper tests — strip_think and strip_think_prefill
 # Maintainer: Informity
 
-from thinkstrip import strip_think, strip_think_prefill
+import pytest
+
+from thinkstrip import ThinkStrip, strip_think, strip_think_prefill
 
 # ==============================================================================
 # strip_think
@@ -47,8 +49,6 @@ def test_strip_think_unclosed_block_discards_remaining() -> None:
 
 def test_strip_think_matches_streaming_behavior() -> None:
     # Batch via single feed should produce identical output to token-by-token streaming
-    from thinkstrip import ThinkStrip
-
     text   = 'Hello <think>reasoning</think> world'
     tokens = list(text)
 
@@ -101,3 +101,8 @@ def test_strip_think_prefill_custom_tag() -> None:
 
 def test_strip_think_prefill_custom_tag_noop() -> None:
     assert strip_think_prefill('Prompt\n<think>', open_tag='[THINK]') == 'Prompt\n<think>'
+
+
+def test_strip_think_prefill_raises_on_empty_tag() -> None:
+    with pytest.raises(ValueError, match='open_tag must not be empty'):
+        strip_think_prefill('Prompt\n<think>', open_tag='')

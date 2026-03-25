@@ -1,9 +1,9 @@
-# thinkstrip | Streaming filter tests — ThinkStrip and AsyncThinkStrip
+# thinkstrip | Streaming filter tests — ThinkStrip
 # Maintainer: Informity
 
 import pytest
 
-from thinkstrip import AsyncThinkStrip, ThinkStrip
+from thinkstrip import ThinkStrip
 
 # ==============================================================================
 # Helpers
@@ -249,62 +249,6 @@ def test_empty_token_is_noop() -> None:
 
 
 # ==============================================================================
-# AsyncThinkStrip
-# ==============================================================================
-
-async def test_async_basic_stream() -> None:
-    stripper = AsyncThinkStrip()
-    out: list[str] = []
-
-    for token in ['<thi', 'nk>', 'hidden', '</thi', 'nk>', 'Answer']:
-        emitted = await stripper.feed(token)
-        if emitted:
-            out.append(emitted)
-
-    flushed = await stripper.flush()
-    if flushed:
-        out.append(flushed)
-
-    assert ''.join(out) == 'Answer'
-
-
-async def test_async_capture_mode() -> None:
-    stripper = AsyncThinkStrip(capture=True)
-
-    await stripper.feed('<think>')
-    await stripper.feed('reasoning')
-    await stripper.feed('</think>')
-    await stripper.feed('Answer')
-    flushed = await stripper.flush()
-
-    assert flushed                == 'Answer'
-    assert stripper.think_content == 'reasoning'
-
-
-async def test_async_in_think_block_property() -> None:
-    stripper = AsyncThinkStrip()
-    await stripper.feed('<think>unclosed')
-    await stripper.flush()
-    assert stripper.in_think_block is True
-
-
-async def test_async_custom_tags() -> None:
-    stripper = AsyncThinkStrip(open_tag='[R]', close_tag='[/R]')
-    out: list[str] = []
-
-    for token in ['[R]', 'hidden', '[/R]', 'visible']:
-        emitted = await stripper.feed(token)
-        if emitted:
-            out.append(emitted)
-
-    flushed = await stripper.flush()
-    if flushed:
-        out.append(flushed)
-
-    assert ''.join(out) == 'visible'
-
-
-# ==============================================================================
 # Malformed and truncated streams
 # ==============================================================================
 
@@ -378,3 +322,52 @@ def test_nested_open_tag_swallowed_as_think_content() -> None:
     # The trailing </think> has no open pair and leaks through as visible text.
     assert 'inner'   not in result
     assert 'visible' in result
+
+
+# ==============================================================================
+# reset()
+# ==============================================================================
+
+def test_reset_clears_state_between_streams() -> None:
+    stripper = ThinkStrip()
+    stripper.feed('<think>reasoning')
+    stripper.flush()
+    assert stripper.in_think_block is True
+
+    stripper.reset()
+    assert stripper.in_think_block is False
+
+    out: list[str] = []
+    if emitted := stripper.feed('Hello'):
+        out.append(emitted)
+    if flushed := stripper.flush():
+        out.append(flushed)
+    assert ''.join(out) == 'Hello'
+
+
+def test_reset_clears_state_and_reuse_works() -> None:
+    stripper = ThinkStrip(capture=True)
+    stripper.feed('<think>first</think>A')
+    stripper.flush()
+
+    stripper.reset()
+
+    out: list[str] = []
+    for token in ['<think>second</think>B']:
+        if emitted := stripper.feed(token):
+            out.append(emitted)
+    if flushed := stripper.flush():
+        out.append(flushed)
+
+    assert ''.join(out)       == 'B'
+    assert stripper.think_content == 'second'
+
+
+def test_reset_clears_captured_content() -> None:
+    stripper = ThinkStrip(capture=True)
+    stripper.feed('<think>old</think>')
+    stripper.flush()
+    assert stripper.think_content == 'old'
+
+    stripper.reset()
+    assert stripper.think_content == ''

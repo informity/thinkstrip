@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass, field
 
 
@@ -12,15 +11,19 @@ class ThinkStrip:
     open_tag:        str  = '<think>'
     close_tag:       str  = '</think>'
     capture:         bool = False
-    _in_think_block: bool = field(default=False, init=False, repr=False)
-    _partial:        str  = field(default='', init=False, repr=False)
+    _in_think_block: bool      = field(default=False, init=False, repr=False)
+    _partial:        str       = field(default='',    init=False, repr=False)
     _captured:       list[str] = field(default_factory=list, init=False, repr=False)
+    _open_guard:     int       = field(default=0,     init=False, repr=False)
+    _close_guard:    int       = field(default=0,     init=False, repr=False)
 
     def __post_init__(self) -> None:
         if not self.open_tag:
             raise ValueError('open_tag must not be empty')
         if not self.close_tag:
             raise ValueError('close_tag must not be empty')
+        self._open_guard  = len(self.open_tag) - 1
+        self._close_guard = len(self.close_tag) - 1
 
     @property
     def think_content(self) -> str:
@@ -39,15 +42,13 @@ class ThinkStrip:
         # swallowed. The first </think> closes the block; any subsequent
         # </think> with no matching open tag passes through as visible text.
         self._partial += token
-        emitted:     list[str] = []
-        open_guard  = len(self.open_tag) - 1
-        close_guard = len(self.close_tag) - 1
+        emitted: list[str] = []
 
         while self._partial:
             if not self._in_think_block:
                 start_pos = self._partial.find(self.open_tag)
                 if start_pos == -1:
-                    safe_len = max(0, len(self._partial) - open_guard)
+                    safe_len = max(0, len(self._partial) - self._open_guard)
                     if safe_len == 0:
                         break
                     emitted.append(self._partial[:safe_len])
@@ -56,13 +57,13 @@ class ThinkStrip:
 
                 if start_pos > 0:
                     emitted.append(self._partial[:start_pos])
-                self._partial       = self._partial[start_pos + len(self.open_tag):]
+                self._partial        = self._partial[start_pos + len(self.open_tag):]
                 self._in_think_block = True
                 continue
 
             end_pos = self._partial.find(self.close_tag)
             if end_pos == -1:
-                safe_len = max(0, len(self._partial) - close_guard)
+                safe_len = max(0, len(self._partial) - self._close_guard)
                 if safe_len == 0:
                     break
                 if self.capture:
@@ -72,7 +73,7 @@ class ThinkStrip:
 
             if self.capture and end_pos > 0:
                 self._captured.append(self._partial[:end_pos])
-            self._partial       = self._partial[end_pos + len(self.close_tag):]
+            self._partial        = self._partial[end_pos + len(self.close_tag):]
             self._in_think_block = False
 
         return ''.join(emitted)
@@ -88,30 +89,8 @@ class ThinkStrip:
         self._partial = ''
         return flushed
 
-
-class AsyncThinkStrip:
-    def __init__(
-        self,
-        open_tag:  str  = '<think>',
-        close_tag: str  = '</think>',
-        capture:   bool = False,
-    ) -> None:
-        self._stripper = ThinkStrip(
-            open_tag=open_tag,
-            close_tag=close_tag,
-            capture=capture,
-        )
-
-    @property
-    def think_content(self) -> str:
-        return self._stripper.think_content
-
-    @property
-    def in_think_block(self) -> bool:
-        return self._stripper.in_think_block
-
-    async def feed(self, token: str) -> str:
-        return await asyncio.to_thread(self._stripper.feed, token)
-
-    async def flush(self) -> str:
-        return await asyncio.to_thread(self._stripper.flush)
+    def reset(self) -> None:
+        """Reset to initial state so the instance can process a new stream."""
+        self._in_think_block = False
+        self._partial        = ''
+        self._captured       = []

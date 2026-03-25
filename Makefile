@@ -1,4 +1,4 @@
-.PHONY: install install-dev test lint build clean
+.PHONY: install install-dev test lint typecheck build clean
 
 install:
 	python -m pip install -e .
@@ -11,6 +11,9 @@ test:
 
 lint:
 	ruff check src tests examples
+
+typecheck:
+	mypy src/
 
 build:
 	python -m build

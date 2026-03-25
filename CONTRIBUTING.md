@@ -58,14 +58,14 @@ This produces `dist/thinkstrip-*.whl` and `dist/thinkstrip-*.tar.gz`.
 
 ## Public API contract
 
-The public API surface is four symbols:
+The public API surface is three symbols:
 
 ```python
-from thinkstrip import ThinkStrip, AsyncThinkStrip, strip_think, strip_think_prefill
+from thinkstrip import ThinkStrip, strip_think, strip_think_prefill
 ```
 
-- Do not rename or remove `ThinkStrip`, `AsyncThinkStrip`, `strip_think`, or `strip_think_prefill` without a major version bump.
-- Do not change the signature of `ThinkStrip.feed()` or `ThinkStrip.flush()` without a minor version bump.
+- Do not rename or remove `ThinkStrip`, `strip_think`, or `strip_think_prefill` without a major version bump.
+- Do not change the signature of `ThinkStrip.feed()`, `ThinkStrip.flush()`, or `ThinkStrip.reset()` without a minor version bump.
 - Zero runtime dependencies must be maintained — no new entries in `[project.dependencies]`.
 
 ---

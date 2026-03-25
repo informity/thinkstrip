@@ -18,5 +18,7 @@ def strip_think(
 
 
 def strip_think_prefill(prompt: str, open_tag: str = '<think>') -> str:
+    if not open_tag:
+        raise ValueError('open_tag must not be empty')
     pattern = rf'\s*{re.escape(open_tag)}\s*$'
     return re.sub(pattern, '', prompt)

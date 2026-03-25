@@ -82,22 +82,6 @@ print(''.join(chunks))
 # The answer.
 ```
 
-### Async streaming
-
-```python
-from thinkstrip import AsyncThinkStrip
-
-stripper = AsyncThinkStrip()
-chunks   = []
-
-async for token in model_stream:
-    if emitted := await stripper.feed(token):
-        chunks.append(emitted)
-
-if flushed := await stripper.flush():
-    chunks.append(flushed)
-```
-
 ### Batch
 
 ```python
@@ -126,7 +110,7 @@ prompt = strip_think_prefill(prompt)
 ## Public API
 
 ```python
-from thinkstrip import ThinkStrip, AsyncThinkStrip, strip_think, strip_think_prefill
+from thinkstrip import ThinkStrip, strip_think, strip_think_prefill
 ```
 
 ### `ThinkStrip`
@@ -145,6 +129,7 @@ ThinkStrip(
 |---|---|
 | `.feed(token: str) -> str` | Process one token. Returns the text to emit (empty string when nothing ready yet). |
 | `.flush() -> str` | Call once at end-of-stream. Returns any buffered visible text. Empty if stream ended inside a think block. |
+| `.reset() -> None` | Reset to initial state. Use to process a second stream with the same instance. |
 | `.think_content: str` | Accumulated think-block text. Non-empty only when `capture=True`. |
 | `.in_think_block: bool` | `True` if the stream ended mid-think-block. Useful for diagnostics. |
 
@@ -156,16 +141,6 @@ ThinkStrip(
 
 Buffer sizes are derived automatically: `len(open_tag) - 1` chars for the opening-tag guard,
 `len(close_tag) - 1` for the closing-tag guard. Custom tags carry no extra cost.
-
-### `AsyncThinkStrip`
-
-Async wrapper around `ThinkStrip`. Delegates to `asyncio.to_thread()` — no threading
-primitives required by the caller. Same constructor signature and properties as `ThinkStrip`.
-
-| Method | Description |
-|---|---|
-| `await .feed(token: str) -> str` | Async variant of `ThinkStrip.feed()` |
-| `await .flush() -> str` | Async variant of `ThinkStrip.flush()` |
 
 ### `strip_think`
 
@@ -206,7 +181,8 @@ for token in stream:
     if emitted := stripper.feed(token):
         yield emitted
 
-stripper.flush()
+if flushed := stripper.flush():
+    yield flushed
 
 print(stripper.think_content)  # full reasoning text
 ```
