@@ -6,7 +6,7 @@
   </picture>
 </p>
 
-# thinkstrip — Streaming Think-Block Stripper for LLM Output
+# thinkstrip — Think-block filter for LLM streams
 
 [![PyPI version](https://img.shields.io/pypi/v/thinkstrip.svg)](https://pypi.org/project/thinkstrip/)
 [![Python versions](https://img.shields.io/pypi/pyversions/thinkstrip.svg)](https://pypi.org/project/thinkstrip/)
