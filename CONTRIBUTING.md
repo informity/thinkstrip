@@ -1,4 +1,4 @@
-# Contributing to thinkstrip
+# Contributing to ThinkStrip
 
 Thank you for your interest in contributing.
 
