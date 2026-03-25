@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build artefacts
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Distribution / packaging
+.eggs/
+MANIFEST
+
+# Test and coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.cover
+
+# Type checker
+.mypy_cache/
+.dmypy.json
+
+# Linter
+.ruff_cache/
+
+# Hypothesis database
+.hypothesis/
+
+# uv — lock file is intentionally not committed for library packages
+uv.lock
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Internal work documents — not committed to the public repo
+.internal/
