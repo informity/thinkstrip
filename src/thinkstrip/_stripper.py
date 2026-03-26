@@ -41,8 +41,10 @@ class ThinkStrip:
         # both halves have arrived (e.g. '<<thi' + 'nk>>' → '<<think>>' → '<think>').
         double_open  = '<' + self.open_tag  + '>'
         double_close = self.close_tag + '>'
-        if double_open  in text: text = text.replace(double_open,  self.open_tag)
-        if double_close in text: text = text.replace(double_close, self.close_tag)
+        if double_open  in text:
+            text = text.replace(double_open,  self.open_tag)
+        if double_close in text:
+            text = text.replace(double_close, self.close_tag)
         return text
 
     def feed(self, token: str) -> str:
