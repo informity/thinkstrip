@@ -33,6 +33,18 @@ class ThinkStrip:
     def in_think_block(self) -> bool:
         return self._in_think_block
 
+    def _normalize(self, text: str) -> str:
+        # Normalize double-angle tag variants emitted by some model templates.
+        # <<think>> → <think>   (extra leading '<' and trailing '>')
+        # </think>> → </think>  (extra trailing '>')
+        # Operates on the full buffer so split-token sequences are caught once
+        # both halves have arrived (e.g. '<<thi' + 'nk>>' → '<<think>>' → '<think>').
+        double_open  = '<' + self.open_tag  + '>'
+        double_close = self.close_tag + '>'
+        if double_open  in text: text = text.replace(double_open,  self.open_tag)
+        if double_close in text: text = text.replace(double_close, self.close_tag)
+        return text
+
     def feed(self, token: str) -> str:
         if not isinstance(token, str):
             raise TypeError('token must be a string')
@@ -42,6 +54,7 @@ class ThinkStrip:
         # swallowed. The first </think> closes the block; any subsequent
         # </think> with no matching open tag passes through as visible text.
         self._partial += token
+        self._partial  = self._normalize(self._partial)
         emitted: list[str] = []
 
         while self._partial:

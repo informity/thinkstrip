@@ -371,3 +371,47 @@ def test_reset_clears_captured_content() -> None:
 
     stripper.reset()
     assert stripper.think_content == ''
+
+
+# ==============================================================================
+# Double-angle tag normalization (<<think>> / </think>> variants)
+# ==============================================================================
+
+def test_double_angle_complete_block() -> None:
+    # <<think>> and </think>> are both normalized before parsing
+    visible, _ = _stream(['<<think>>hidden</think>>Answer'])
+    assert visible == 'Answer'
+
+
+def test_double_angle_split_open_tag() -> None:
+    # <<think>> split across two tokens — normalization fires once both halves
+    # are in the buffer
+    visible, _ = _stream(['<<thi', 'nk>>hidden</think>>Answer'])
+    assert visible == 'Answer'
+
+
+def test_double_angle_split_close_tag() -> None:
+    # </think>> split across two tokens — the second '>' arrives in the next token
+    visible, _ = _stream(['<<think>>hidden</think', '>>Answer'])
+    assert visible == 'Answer'
+
+
+def test_double_angle_orphaned_open_tag_no_visible_output() -> None:
+    # <<think>> with no matching close tag: stream ends inside think block
+    stripper = ThinkStrip()
+    stripper.feed('<<think>>unfinished reasoning')
+    assert stripper.flush() == ''
+    assert stripper.in_think_block is True
+
+
+def test_double_angle_capture_mode() -> None:
+    # Captured content is unaffected by double-angle normalization
+    visible, think = _stream(['<<think>>reasoning</think>>Answer'], capture=True)
+    assert visible == 'Answer'
+    assert think   == 'reasoning'
+
+
+def test_double_angle_mixed_with_standard_tags() -> None:
+    # A stream that mixes standard and double-angle variants in separate blocks
+    visible, _ = _stream(['A<<think>>x</think>>B<think>y</think>C'])
+    assert visible == 'ABC'

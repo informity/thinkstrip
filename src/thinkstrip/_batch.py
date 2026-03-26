@@ -20,5 +20,8 @@ def strip_think(
 def strip_think_prefill(prompt: str, open_tag: str = '<think>') -> str:
     if not open_tag:
         raise ValueError('open_tag must not be empty')
-    pattern = rf'\s*{re.escape(open_tag)}\s*$'
+    # Normalize double-angle variant before matching (e.g. <<think>> → <think>)
+    double_open = '<' + open_tag + '>'
+    prompt      = prompt.replace(double_open, open_tag)
+    pattern     = rf'\s*{re.escape(open_tag)}\s*$'
     return re.sub(pattern, '', prompt)

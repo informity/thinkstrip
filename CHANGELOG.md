@@ -11,6 +11,21 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.2.1] — 2026-03-26
+
+### Added
+
+- Double-angle tag normalization — `ThinkStrip.feed()` now normalises `<<think>>` → `<think>` and
+  `</think>>` → `</think>` on the accumulated buffer before parsing, so split-token sequences
+  (e.g. `<<thi` / `nk>>`) are handled correctly in streaming mode
+- `strip_think_prefill` normalises `<<open_tag>` variants before the trailing-tag regex, so
+  prefill prompts that use the double-angle form are stripped cleanly
+- 17 new tests covering: complete double-angle block, split-token open/close tags, orphaned
+  opening double-angle tag, capture mode, mixed standard+double-angle streams, and all batch
+  helper variants
+
+---
+
 ## [0.2.0] — 2026-03-25
 
 ### Added
@@ -72,6 +87,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-[Unreleased]: https://github.com/informity/thinkstrip/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/informity/thinkstrip/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/informity/thinkstrip/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/informity/thinkstrip/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/informity/thinkstrip/releases/tag/v0.1.0
